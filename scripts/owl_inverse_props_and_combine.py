@@ -149,17 +149,18 @@ for file in tqdm(rdf_files, total=len(rdf_files)):
     project_path = file.split("/")[2]
     if project_path == "lk":
         project_uri = URIRef(f"{SK}project/legal-kraus")
+        prefix = "lk"
+        ns = LK
     elif project_path == "fa":
         project_uri = URIRef(f"{SK}project/fackel")
+        prefix = "fa"
+        ns = FA
     elif project_path == "dw":
         project_uri = URIRef(f"{SK}project/dritte-walpurgisnacht")
+        prefix = "dw"
+        ns = DW
     g = Graph(store=project_store, identifier=project_uri)
-    if project_path == "lk":
-        g.bind("lk", LK)
-    elif project_path == "fa":
-        g.bind("fa", FA)
-    elif project_path == "dw":
-        g.bind("dw", DW)
+    g.bind(prefix, ns)
     g.bind("dct", DCTERMS)
     g.bind("void", VOID)
     g.bind("sk", SK)
