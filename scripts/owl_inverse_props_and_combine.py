@@ -126,49 +126,36 @@ for file in tqdm(rdf_files, total=len(rdf_files)):
     if len(all_inverse_triples) != 0:
         unique_triples = [dict(t) for t in {tuple(d.items()) for d in all_inverse_triples}]
         trig_path = file.replace(".ttl", ".trig")
-        ds = parse_rdf_trig(trig_path)
         project_path = file.split("/")[2]
         if project_path == "lk":
             project_uri = URIRef(f"{SK}project/legal-kraus")
+            prefix = "lk"
+            ns = LK
         elif project_path == "fa":
             project_uri = URIRef(f"{SK}project/fackel")
+            prefix = "fa"
+            ns = FA
         elif project_path == "dw":
             project_uri = URIRef(f"{SK}project/dritte-walpurgisnacht")
-        g = ds.graph(project_uri)
+            prefix = "dw"
+            ns = DW
+        g = Graph(store=project_store, identifier=project_uri)
+        g.bind(prefix, ns)
+        g.bind("dct", DCTERMS)
+        g.bind("void", VOID)
+        g.bind("sk", SK)
+        g.bind("cidoc", CIDOC)
+        g.bind("frbroo", FRBROO)
+        g.parse(trig_path, format="trig")
         for triple in unique_triples:
             s = URIRef(triple["sbj"])
             p = URIRef(triple["pred"])
             o = URIRef(triple["obj"])
-            ds.add((s, p, o, g))
-        ds.serialize(trig_path, format="trig")
-        print("saved file: ", trig_path)
+            g.add((s, p, o))
+        print("saved file: ", file)
         save_dict(unique_triples, f"{file.replace('.ttl', '')}.json")
-
-
-for file in tqdm(rdf_files, total=len(rdf_files)):
-    project_path = file.split("/")[2]
-    if project_path == "lk":
-        project_uri = URIRef(f"{SK}project/legal-kraus")
-        prefix = "lk"
-        ns = LK
-    elif project_path == "fa":
-        project_uri = URIRef(f"{SK}project/fackel")
-        prefix = "fa"
-        ns = FA
-    elif project_path == "dw":
-        project_uri = URIRef(f"{SK}project/dritte-walpurgisnacht")
-        prefix = "dw"
-        ns = DW
-    g = Graph(store=project_store, identifier=project_uri)
-    g.bind(prefix, ns)
-    g.bind("dct", DCTERMS)
-    g.bind("void", VOID)
-    g.bind("sk", SK)
-    g.bind("cidoc", CIDOC)
-    g.bind("frbroo", FRBROO)
-    print(f"parsing file: {file}")
-    g.parse(file, format="ttl")
 
 print("saving combined graph")
 g_all = ConjunctiveGraph(store=project_store)
-g_all.serialize("rdf/sk_combined.trig", format="trig")
+g_all.serialize("rdf/sk_fa_m_combined.trig", format="trig")
+print("done")
